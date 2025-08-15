@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Form, Row, Col } from 'react-bootstrap';
+import { Card, Button, Form, Row, Col, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 
 const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
@@ -8,29 +8,38 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
   const [consultationType, setConsultationType] = useState(initialData?.consultationType || 'en_ligne');
   const [symptoms, setSymptoms] = useState(initialData?.symptoms || '');
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 6; // nombre de docteurs par page
+
+  const fetchDocteurs = async (currentPage = 1) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error("Utilisateur non authentifié");
+
+      const response = await axios.get(`http://localhost:8000/api/docteurs?page=${currentPage}&limit=${limit}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = Array.isArray(response.data.data) ? response.data.data : response.data;
+      setDocteurs(data);
+      setTotalPages(response.data.totalPages || 1);
+      setPage(currentPage);
+    } catch (err) {
+      console.error('Erreur lors de la récupération des docteurs', err);
+      setError(err.message || "Erreur inconnue");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDocteur = async () => {
-      try {
-        const token = localStorage.getItem('token'); // Récupération du token JWT
-        if (!token) {
-          throw new Error("Utilisateur non authentifié");
-        }
-
-        const response = await axios.get('http://localhost:8000/api/docteurs', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-        });
-
-        setDocteurs(response.data);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des docteurs', error);
-        setError(error.message || "Erreur inconnue");
-      }
-    };
-
-    fetchDocteur();
+    fetchDocteurs(page);
+    // eslint-disable-next-line
   }, []);
 
   const handleSubmit = (e) => {
@@ -39,48 +48,37 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
     nextStep();
   };
 
+  const handlePrevPage = () => {
+    if (page > 1) fetchDocteurs(page - 1);
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) fetchDocteurs(page + 1);
+  };
+
   return (
     <Card>
       <Card.Body>
         <Form onSubmit={handleSubmit}>
           <h4 className="mb-4">1. Choisissez votre médecin</h4>
 
-          {error && (
-            <div className="alert alert-danger">
-              {error}
-            </div>
-          )}
+          {error && <div className="alert alert-danger">{error}</div>}
 
           <Form.Group className="mb-4">
             <Form.Label>Type de consultation</Form.Label>
             <div>
-              <Form.Check
-                inline
-                type="radio"
-                label="En ligne"
-                name="consultationType"
-                value="en_ligne"
-                checked={consultationType === 'en_ligne'}
-                onChange={() => setConsultationType('en_ligne')}
-              />
-              <Form.Check
-                inline
-                type="radio"
-                label="À domicile"
-                name="consultationType"
-                value="a_domicile"
-                checked={consultationType === 'a_domicile'}
-                onChange={() => setConsultationType('a_domicile')}
-              />
-              <Form.Check
-                inline
-                type="radio"
-                label="À l'hôpital"
-                name="consultationType"
-                value="a_hopital"
-                checked={consultationType === 'a_hopital'}
-                onChange={() => setConsultationType('a_hopital')}
-              />
+              {['en_ligne', 'a_domicile', 'a_hopital'].map((type) => (
+                <Form.Check
+                  inline
+                  key={type}
+                  type="radio"
+                  label={type.replace('_', ' ')}
+                  name="consultationType"
+                  value={type}
+                  checked={consultationType === type}
+                  onChange={() => setConsultationType(type)}
+                />
+              ))}
             </div>
           </Form.Group>
 
@@ -100,34 +98,54 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
           </Form.Group>
 
           <Form.Label>Choisissez un médecin</Form.Label>
-          <Row className="g-4">
-            {docteurs.map(docteur => (
-              <Col md={4} key={docteur.id}>
-                <Card
-                  className={`doctor-card ${selectedDocteur?.id === docteur.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedDocteur(docteur)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <Card.Img 
-                    variant="top" 
-                    src={docteur.image || '/img/default-doctor.jpg'} 
-                    alt={`${docteur.nom} ${docteur.prenom}`} 
-                  />
-                  <Card.Body>
-                    <Card.Title>{docteur.nom} {docteur.prenom}</Card.Title>
-                    <Card.Text className="text-muted">{docteur.specialite}</Card.Text>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+          {loading ? (
+            <div className="text-center my-3">
+              <Spinner animation="border" />
+            </div>
+          ) : (
+            <>
+              <Row className="g-4">
+                {Array.isArray(docteurs) && docteurs.length > 0 ? (
+                  docteurs.map((docteur) => (
+                    <Col md={4} key={docteur.id}>
+                      <Card
+                        className={`doctor-card ${selectedDocteur?.id === docteur.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedDocteur(docteur)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Card.Img
+                          variant="top"
+                          src={docteur.image || '/img/default-doctor.jpg'}
+                          alt={`${docteur.nom} ${docteur.prenom}`}
+                        />
+                        <Card.Body>
+                          <Card.Title>{docteur.nom} {docteur.prenom}</Card.Title>
+                          <Card.Text className="text-muted">{docteur.specialite}</Card.Text>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))
+                ) : (
+                  <Col>
+                    <p>Aucun médecin trouvé pour cette page.</p>
+                  </Col>
+                )}
+              </Row>
+
+              <div className="d-flex justify-content-center my-3">
+                <Button variant="secondary" onClick={handlePrevPage} disabled={page <= 1} className="me-2">
+                  Précédent
+                </Button>
+                <span className="align-self-center">{page} / {totalPages}</span>
+                <Button variant="secondary" onClick={handleNextPage} disabled={page >= totalPages} className="ms-2">
+                  Suivant
+                </Button>
+              </div>
+            </>
+          )}
 
           <div className="d-flex justify-content-end mt-4">
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={!selectedDocteur}
-            >
+            <Button variant="primary" type="submit" disabled={!selectedDocteur}>
               Suivant
             </Button>
           </div>

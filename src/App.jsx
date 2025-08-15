@@ -22,6 +22,7 @@ import MesNotificationsDocteur from './pages/notification/MesNotificationsDocteu
 import PriseRendezVous from './pages/patient/PriseRendezVous/PriseRendezVous';
 import MesRendezVous from './pages/patient/PriseRendezVous/MesRendezVous';
 import PatientConsultationsEnLigne from './pages/patient/PatientConsultationsEnLigne';
+import Profile from './pages/Profile';
 
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/mes-consultations-en-ligne" element={<PrivateRoute><PatientConsultationsEnLigne /></PrivateRoute>} />
 
           {/* Routes protégées */}

@@ -1,120 +1,146 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import api from "../services/Api";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Alert, Button, Form, Card, Row, Col } from 'react-bootstrap';
 
-export default function Register() {
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-        confirmPassword: ""
-    });
-    const [error, setError] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
+export default function Signup() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [nom, setNom] = useState('');
+    const [prenom, setPrenom] = useState('');
+    const [adresse, setAdresse] = useState('');
+    const [telephone, setTelephone] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
 
-    const handleSubmit = async (e) => {
+    async function handleSubmit(e) {
         e.preventDefault();
-        setError("");
 
-        // Validation
-        if (formData.password !== formData.confirmPassword) {
-            setError("Les mots de passe ne correspondent pas");
-            return;
+        if (!email.includes('@')) {
+            return setError('Email invalide');
         }
-
-        setIsSubmitting(true);
+        if (password.length < 6) {
+            return setError('Le mot de passe doit contenir au moins 6 caractères');
+        }
 
         try {
-            // 1. Enregistrement
-            const registerResponse = await api.post('/register', {
-                email: formData.email,
-                password: formData.password
+            setError('');
+            setLoading(true);
+
+            const response = await fetch('http://localhost:8000/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, nom, prenom, adresse, telephone }),
             });
 
-            if (!registerResponse.data.message.includes("succès")) {
-                throw new Error(registerResponse.data.message || "Erreur lors de l'inscription");
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Échec de l\'inscription');
             }
 
-            // 2. Connexion automatique
-            const loginResult = await login(formData.email, formData.password);
-            
-            if (loginResult.success) {
-                navigate("/"); // Redirection vers la page d'accueil
+            const data = await response.json();
+
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+                navigate('/login');
             } else {
-                throw new Error("Connexion automatique échouée");
+                navigate('/login');
             }
-
         } catch (err) {
-            console.error("Registration error:", err);
-            setError(err.response?.data?.message || err.message || "Erreur lors de l'inscription");
-        } finally {
-            setIsSubmitting(false);
+            console.error(err);
+            setError(`Échec de l'inscription: ${err.message}`);
         }
-    };
 
+        setLoading(false);
+    }
 
     return (
-        <div className="container col-md-6 col-lg-4 mt-5">
-            <div className="card shadow">
-                <div className="card-body p-4">
-                    <h2 className="text-center mb-4">Inscription</h2>
-                    
-                    {error && <div className="alert alert-danger">{error}</div>}
+        <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '80vh' }}>
+            <Card className="w-100" style={{ maxWidth: '500px' }}>
+                <Card.Body>
+                    <h2 className="text-center mb-4">Créer un compte</h2>
+                    {error && <Alert variant="danger">{error}</Alert>}
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label htmlFor="email" className="form-label">Email</label>
-                            <input
+                    <Form onSubmit={handleSubmit}>
+                        <Row className="mb-3">
+                            <Col>
+                                <Form.Label>Nom</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={nom}
+                                    onChange={(e) => setNom(e.target.value)}
+                                    required
+                                />
+                            </Col>
+                            <Col>
+                                <Form.Label>Prénom</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={prenom}
+                                    onChange={(e) => setPrenom(e.target.value)}
+                                    required
+                                />
+                            </Col>
+                        </Row>
+
+                        <Row className="mb-3">
+                            <Col>
+                                <Form.Label>Téléphone</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={telephone}
+                                    onChange={(e) => setTelephone(e.target.value)}
+                                    required
+                                />
+                            </Col>
+                            <Col>
+                                <Form.Label>Adresse</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={adresse}
+                                    onChange={(e) => setAdresse(e.target.value)}
+                                    required
+                                />
+                            </Col>
+                        </Row>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Email</Form.Label>
+                            <Form.Control
                                 type="email"
-                                className="form-control"
-                                id="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
-                        </div>
+                        </Form.Group>
 
-                        <div className="mb-3">
-                            <label htmlFor="password" className="form-label">Mot de passe</label>
-                            <input
+                        <Form.Group className="mb-4">
+                            <Form.Label>Mot de passe</Form.Label>
+                            <Form.Control
                                 type="password"
-                                className="form-control"
-                                id="password"
-                                value={formData.password}
-                                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                minLength="6"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
-                        </div>
+                        </Form.Group>
 
-                        <div className="mb-4">
-                            <label htmlFor="confirmPassword" className="form-label">Confirmation</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                id="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                                required
-                            />
-                        </div>
-
-                        <button 
-                            type="submit" 
-                            className="btn btn-primary w-100"
-                            disabled={isSubmitting}
+                        <Button
+                            disabled={loading}
+                            className="w-100 mb-3"
+                            type="submit"
+                            variant="primary"
                         >
-                            {isSubmitting ? "Inscription en cours..." : "S'inscrire"}
-                        </button>
-                    </form>
+                            {loading ? 'Inscription en cours...' : 'S\'inscrire'}
+                        </Button>
+                    </Form>
 
-                    <div className="mt-3 text-center">
-                        <p>Déjà inscrit ? <a href="/login">Connectez-vous</a></p>
+                    <div className="text-center mt-3">
+                        <Link to="/login" className="text-decoration-none">
+                            Déjà un compte ? Se connecter
+                        </Link>
                     </div>
-                </div>
-            </div>
+                </Card.Body>
+            </Card>
         </div>
     );
 }

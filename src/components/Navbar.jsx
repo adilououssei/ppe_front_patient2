@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { FaBell } from "react-icons/fa"; // 📌 icône de notification
+import { FaBell } from "react-icons/fa";
 
 function Navbar() {
     const { user, logout } = useAuth();
@@ -50,24 +50,16 @@ function Navbar() {
                                     Pages
                                 </Link>
                                 <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li>
-                                        <Link to="/prise-rendez-vous" className="dropdown-item">Rendez-vous</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="/pharmacies" className="dropdown-item">Pharmacies de garde</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="/mes-rdv" className="dropdown-item">Mes rendez-vous</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="/mes-consultations-en-ligne" className="dropdown-item">Mes consultations en ligne</Link>
-                                    </li>
+                                    <li><Link to="/prise-rendez-vous" className="dropdown-item">Rendez-vous</Link></li>
+                                    <li><Link to="/pharmacies" className="dropdown-item">Pharmacies de garde</Link></li>
+                                    <li><Link to="/mes-rdv" className="dropdown-item">Mes rendez-vous</Link></li>
+                                    <li><Link to="/mes-consultations-en-ligne" className="dropdown-item">Mes consultations en ligne</Link></li>
                                 </ul>
                             </div>
 
                             <Link to="/contact" className="nav-item nav-link me-3">Contact</Link>
 
-                            {/* 🔔 Icône Notification pour Patient ou Docteur */}
+                            {/* 🔔 Notifications pour Patient ou Docteur */}
                             {(isPatient || isDocteur) && (
                                 <Link to="/mes-notifications" className="nav-link position-relative me-3">
                                     <FaBell size={24} color="#0077B6" />
@@ -77,15 +69,32 @@ function Navbar() {
                                 </Link>
                             )}
 
-                            {/* Connexion/Déconnexion */}
-                            {user ? (
-                                <button onClick={handleLogout} className="login-button">
-                                    Déconnexion
-                                </button>
-                            ) : (
-                                <Link to="/login" className="login-button">
-                                    Connexion
-                                </Link>
+                            {/* Dropdown "Mon Compte" pour Patient */}
+                            {isPatient && (
+                                <div className="nav-item dropdown">
+                                    <Link to="#" className="nav-link dropdown-toggle"
+                                        id="accountDropdown"
+                                        role="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        onClick={(e) => e.preventDefault()}>
+                                        Mon Compte
+                                    </Link>
+                                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                                        <li>
+                                            <Link to="/profile" className="dropdown-item">Profile</Link>
+                                        </li>
+                                        <li><hr className="dropdown-divider" /></li>
+                                        <li>
+                                            <button onClick={handleLogout} className="dropdown-item">Déconnexion</button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Connexion si non connecté */}
+                            {!user && (
+                                <Link to="/login" className="login-button">Connexion</Link>
                             )}
                         </div>
                     </div>
