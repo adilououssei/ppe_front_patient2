@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, ListGroup, Badge, Alert, Spinner } from 'react-bootstrap';
 
+const canJoinConsultation = (statut) => {
+  const s = statut.toLowerCase();
+  return s === 'confirmé' || s === 'en_attente' || s === 'en attente';
+};
+
 const PatientConsultationsEnLigne = () => {
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,13 +88,14 @@ const PatientConsultationsEnLigne = () => {
                     </p>
                     <p className="mb-1">Symptômes: {consultation.symptoms}</p>
                     <Badge bg={
-                      consultation.statut === 'confirmé' ? 'success' : 
-                      consultation.statut === 'annulé' ? 'danger' : 'warning'
+                      consultation.statut.toLowerCase() === 'confirmé' ? 'success' : 
+                      consultation.statut.toLowerCase() === 'annulé' ? 'danger' : 'warning'
                     }>
                       {consultation.statut}
                     </Badge>
                   </div>
-                  {consultation.statut === 'confirmé' && (
+
+                  {canJoinConsultation(consultation.statut) && (
                     <a 
                       href={consultation.lienVideo} 
                       target="_blank" 
@@ -100,6 +106,7 @@ const PatientConsultationsEnLigne = () => {
                     </a>
                   )}
                 </div>
+
                 {consultation.prescription && (
                   <div className="mt-3">
                     <h6>Prescription:</h6>
