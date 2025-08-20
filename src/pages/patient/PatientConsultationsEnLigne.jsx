@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, ListGroup, Badge, Alert, Spinner } from 'react-bootstrap';
+import { Container, Card, ListGroup, Badge, Alert, Spinner, Button, Modal } from 'react-bootstrap';
 
 const canJoinConsultation = (statut) => {
   const s = statut.toLowerCase();
@@ -10,6 +10,8 @@ const PatientConsultationsEnLigne = () => {
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
 
   useEffect(() => {
     const fetchConsultations = async () => {
@@ -22,15 +24,18 @@ const PatientConsultationsEnLigne = () => {
         if (!response.ok) throw new Error('Erreur de chargement');
 
         const data = await response.json();
-        
+
         const formattedData = data.map(c => ({
           id: c.id,
-          docteur: c.rendezVous?.docteur ? 
-                 `${c.rendezVous.docteur.prenom} ${c.rendezVous.docteur.nom}` : 'Docteur',
-          date: c.rendezVous?.dateConsultationAt ? 
-               new Date(c.rendezVous.dateConsultationAt).toLocaleDateString() : 'N/A',
-          time: c.rendezVous?.heureConsultation ?
-               c.rendezVous.heureConsultation.substring(0, 5) : 'N/A',
+          docteur: c.rendezVous?.docteur
+            ? `${c.rendezVous.docteur.prenom} ${c.rendezVous.docteur.nom}`
+            : 'Docteur',
+          date: c.rendezVous?.dateConsultationAt
+            ? new Date(c.rendezVous.dateConsultationAt).toLocaleDateString()
+            : 'N/A',
+          time: c.rendezVous?.heureConsultation
+            ? c.rendezVous.heureConsultation.substring(0, 5)
+            : 'N/A',
           symptoms: c.symptoms || 'Non spécifié',
           statut: c.statut || c.rendezVous?.statut || 'inconnu',
           prescription: c.prescription || '',
@@ -48,6 +53,11 @@ const PatientConsultationsEnLigne = () => {
 
     fetchConsultations();
   }, []);
+
+  const handleJoinConsultation = (consultation) => {
+    setSelectedConsultation(consultation);
+    setShowModal(true);
+  };
 
   if (loading) {
     return (
@@ -87,27 +97,30 @@ const PatientConsultationsEnLigne = () => {
                       Date: {consultation.date} à {consultation.time}
                     </p>
                     <p className="mb-1">Symptômes: {consultation.symptoms}</p>
-                    <Badge bg={
-                      consultation.statut.toLowerCase() === 'confirmé' ? 'success' : 
-                      consultation.statut.toLowerCase() === 'annulé' ? 'danger' : 'warning'
-                    }>
+                    <Badge
+                      bg={
+                        consultation.statut.toLowerCase() === 'confirmé'
+                          ? 'success'
+                          : consultation.statut.toLowerCase() === 'annulé'
+                            ? 'danger'
+                            : 'warning'
+                      }
+                    >
                       {consultation.statut}
                     </Badge>
                   </div>
 
                   {canJoinConsultation(consultation.statut) && (
-                    <a 
-                      href={consultation.lienVideo} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="btn btn-primary"
+                    <Button
+                      variant="primary"
+                      onClick={() => handleJoinConsultation(consultation)}
                     >
                       Rejoindre la consultation
-                    </a>
+                    </Button>
                   )}
                 </div>
 
-                {consultation.prescription && (
+                {consultation.prescription && consultation.statut === 'terminé' && (
                   <div className="mt-3">
                     <h6>Prescription:</h6>
                     <p>{consultation.prescription}</p>
@@ -118,6 +131,28 @@ const PatientConsultationsEnLigne = () => {
           )}
         </ListGroup>
       </Card>
+
+      {/* Modal avec l'iframe Jitsi */}
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        fullscreen
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Consultation en ligne avec Dr. {selectedConsultation?.docteur}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ height: "90vh", padding: 0 }}>
+          <iframe
+            src={selectedConsultation?.lienVideo}
+            allow="camera; microphone; fullscreen; display-capture"
+            style={{ width: "100%", height: "100%", border: "none" }}
+            title="Consultation Vidéo"
+          />
+        </Modal.Body>
+      </Modal>
+
     </Container>
   );
 };

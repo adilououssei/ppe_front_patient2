@@ -33,7 +33,7 @@ export default function Login() {
                             <div className="row g-0">
                                 <div className="col-md-6 col-lg-5 d-none d-md-block">
                                     <img
-                                        src="https://i.postimg.cc/4dt6k518/male-nurse-working-clinic.jpg"
+                                        src="src/assets/_formaliser_lassurance_sante_.jpg"
                                         alt="login form"
                                         className="img-fluid"
                                         style={{ borderRadius: "1rem 0 0 1rem", height: "500px" }}
