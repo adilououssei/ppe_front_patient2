@@ -11,57 +11,54 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
   const [error, setError] = useState(null);
 
   const handleSubmit = async () => {
-  // Vérification que le médecin est bien sélectionné
-  if (!data?.docteur?.id) {
-    setError('Veuillez sélectionner un médecin avant de confirmer');
-    return;
-  }
-
-  // Vérification des autres champs obligatoires
-  if (!data.date || !data.time) {
-    setError('Veuillez sélectionner une date et une heure');
-    return;
-  }
-
-  setIsSubmitting(true);
-  setError(null);
-
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentification requise');
+    // Vérification des champs obligatoires
+    if (!data?.docteur?.id) {
+      setError('Veuillez sélectionner un médecin avant de confirmer');
+      return;
+    }
+    if (!data.date || !data.time?.debut) {
+      setError('Veuillez sélectionner une date et une heure');
+      return;
     }
 
-    // Formatage des données pour Symfony
-    const requestData = {
-      docteur: data.docteur.id,
-      dateRendezVous: format(parseISO(data.date), 'yyyy-MM-dd'),
-      heureRendezVous: data.time,
-      typeConsultation: data.consultationType || 'en_cabinet',
-      descriptionRendezVous: data.symptoms || 'Non spécifié'
-    };
+    setIsSubmitting(true);
+    setError(null);
 
-    console.log('Données envoyées:', requestData); // Pour débogage
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Authentification requise');
 
-    const response = await axios.post(
-      'http://localhost:8000/api/rendezVous',
-      requestData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      // Préparation des données pour l'API
+      const requestData = {
+        docteur: data.docteur.id,
+        dateRendezVous: format(parseISO(data.date), 'yyyy-MM-dd'),
+        heureRendezVous: data.time.debut, // On envoie uniquement l'heure de début
+        typeConsultation: data.consultationType || 'en_cabinet',
+        descriptionRendezVous: data.symptoms || 'Non spécifié',
+      };
+
+      console.log('Données envoyées:', requestData);
+
+      await axios.post(
+        'https://myhospital.archipel-dutyfree.com/api/rendezVous',
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
+      );
 
-    navigate('/mes-rdv', { state: { success: true } });
-  } catch (error) {
-    console.error('Erreur:', error.response?.data || error.message);
-    setError(error.response?.data?.error || error.message || "Erreur lors de la création du rendez-vous");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      navigate('/mes-rdv', { state: { success: true } });
+
+    } catch (err) {
+      console.error('Erreur:', err.response?.data || err.message);
+      setError(err.response?.data?.error || err.message || 'Erreur lors de la création du rendez-vous');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const getConsultationType = () => {
     switch (data?.consultationType) {
@@ -74,10 +71,10 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
 
   const formatDateTime = () => {
     try {
-      if (!data?.date) return 'Date non spécifiée';
+      if (!data?.date || !data?.time?.debut) return 'Date ou heure non spécifiée';
       const date = parseISO(data.date);
       if (!isValid(date)) return 'Date invalide';
-      return `${format(date, "EEEE d MMMM yyyy", { locale: fr })} à ${data.time || 'heure non spécifiée'}`;
+      return `${format(date, "EEEE d MMMM yyyy", { locale: fr })} à ${data.time.debut}`;
     } catch {
       return 'Date invalide';
     }
@@ -117,13 +114,11 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
         </ListGroup>
 
         <div className="d-flex justify-content-between">
-          <Button variant="secondary" onClick={prevStep}>
-            Retour
-          </Button>
+          <Button variant="secondary" onClick={prevStep}>Retour</Button>
           <Button
             variant="success"
             onClick={handleSubmit}
-            disabled={isSubmitting || !data?.docteur?.id || !data?.date || !data?.time}
+            disabled={isSubmitting || !data?.docteur?.id || !data?.date || !data?.time?.debut}
           >
             {isSubmitting ? 'Envoi en cours...' : 'Confirmer le rendez-vous'}
           </Button>

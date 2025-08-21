@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Form, Row, Col, ListGroup, Alert } from 'react-bootstrap';
-import { format, parseISO } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import axios from 'axios';
 
@@ -9,7 +9,7 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [availableSlots, setAvailableSlots] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); // Ajoutez cette ligne
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     setSelectedDate(null);
@@ -21,12 +21,12 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
       if (!initialData.docteur?.id) return;
 
       setLoading(true);
-      setError(null); // Initialisez l'erreur à null avant la requête
+      setError(null);
 
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:8000/api/disponibilites?docteur=${initialData.docteur.id}`,
+          `https://myhospital.archipel-dutyfree.com/api/disponibilites?docteur=${initialData.docteur.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -41,7 +41,7 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
         setAvailableSlots(slotsByDate);
       } catch (err) {
         console.error("Erreur:", err);
-        setError("Erreur lors du chargement des disponibilités"); // Utilisez setError ici
+        setError("Erreur lors du chargement des disponibilités");
       } finally {
         setLoading(false);
       }
@@ -58,14 +58,17 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (selectedDate && selectedTime) {
-      updateData({ date: selectedDate, time: selectedTime });
+      updateData({
+        date: selectedDate,
+        time: selectedTime,
+      });
       nextStep();
     }
   };
 
   const formatDay = (dateStr) => {
     if (!dateStr || isNaN(Date.parse(dateStr))) return 'Date invalide';
-    const date = parseISO(dateStr);
+    const date = parse(dateStr, 'yyyy-MM-dd', new Date());
     return format(date, 'EEEE d MMMM', { locale: fr });
   };
 
@@ -109,14 +112,14 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
                 <div className="time-slots-container">
                   {availableSlots[selectedDate]?.length > 0 ? (
                     <Row className="g-2">
-                      {availableSlots[selectedDate].map((time, index) => (
-                        <Col xs={6} sm={4} key={index}>
+                      {availableSlots[selectedDate].map((slot, index) => (
+                        <Col xs={6} sm={4} key={slot.id ?? index}>
                           <Button
-                            variant={selectedTime === time ? 'primary' : 'outline-primary'}
+                            variant={selectedTime?.id === slot.id ? 'primary' : 'outline-primary'}
                             className="w-100 mb-2"
-                            onClick={() => setSelectedTime(time)}
+                            onClick={() => setSelectedTime(slot)}
                           >
-                            {time}
+                            {`${slot.debut ? format(parse(slot.debut, 'HH:mm', new Date()), 'HH:mm') : ''} - ${slot.fin ? format(parse(slot.fin, 'HH:mm', new Date()), 'HH:mm') : ''}`}
                           </Button>
                         </Col>
                       ))}
