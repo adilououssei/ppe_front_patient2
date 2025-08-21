@@ -60,14 +60,14 @@ function Navbar() {
                             <Link to="/contact" className="nav-item nav-link me-3">Contact</Link>
 
                             {/* 🔔 Notifications pour Patient ou Docteur */}
-                            {(isPatient || isDocteur) && (
+                            {/* {(isPatient || isDocteur) && (
                                 <Link to="/mes-notifications" className="nav-link position-relative me-3">
                                     <FaBell size={24} color="#0077B6" />
                                     <span className="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
                                         <span className="visually-hidden">New alerts</span>
                                     </span>
                                 </Link>
-                            )}
+                            )} */}
 
                             {/* Dropdown "Mon Compte" pour Patient */}
                             {isPatient && (

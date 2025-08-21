@@ -28,25 +28,13 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Authentification requise');
 
-      // Préparation des données pour l'API
-      const requestData = {
-        docteur: data.docteur.id,
-        dateRendezVous: format(parseISO(data.date), 'yyyy-MM-dd'),
-        heureRendezVous: data.time.debut, // On envoie uniquement l'heure de début
-        typeConsultation: data.consultationType || 'en_cabinet',
-        descriptionRendezVous: data.symptoms || 'Non spécifié',
-      };
-
-      console.log('Données envoyées:', requestData);
-
-      await axios.post(
-        'https://myhospital.archipel-dutyfree.com/api/rendezVous',
-        requestData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+    const response = await axios.post(
+      'https://myhospital.archipel-dutyfree.com/api/rendezVous',
+      requestData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       );
 
