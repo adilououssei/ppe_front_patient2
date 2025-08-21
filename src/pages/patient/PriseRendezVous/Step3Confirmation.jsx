@@ -36,7 +36,8 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
-      );
+      }
+    );
 
       navigate('/mes-rdv', { state: { success: true } });
 
