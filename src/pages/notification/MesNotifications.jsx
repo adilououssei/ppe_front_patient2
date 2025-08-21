@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { Modal, Button, Spinner, ListGroup, Badge, Alert } from 'react-bootstrap';
 import api from '../../services/Api';
 
-export default function MesNotifications() {
+export default function MesNotificationsModal({ show, handleClose }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!show) return; // Ne pas fetch si modal fermée
+
     const fetchNotifications = async () => {
+      setLoading(true);
       try {
         const response = await api.get('/mes-notifications');
         setNotifications(response.data);
@@ -18,35 +22,46 @@ export default function MesNotifications() {
         setLoading(false);
       }
     };
-    fetchNotifications();
-  }, []);
 
-  if (loading) return <div className="text-center mt-4">Chargement...</div>;
-  if (error) return <div className="alert alert-danger text-center">{error}</div>;
+    fetchNotifications();
+  }, [show]);
 
   return (
-    <div className="container mt-5">
-      <div className="card shadow">
-        <div className="card-header bg-info text-white">
-          <h4 className="mb-0">Mes Notifications</h4>
-        </div>
-        <div className="card-body">
-          {notifications.length === 0 ? (
-            <p className="text-center">Aucune notification pour le moment.</p>
-          ) : (
-            <ul className="list-group">
-              {notifications.map((notif, index) => (
-                <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                  {notif.message}
-                  <span className="badge bg-secondary">
-                    {new Date(notif.createdAt).toLocaleString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
+    <Modal show={show} onHide={handleClose} centered size="lg">
+      <Modal.Header closeButton className="bg-info text-white">
+        <Modal.Title>Mes Notifications</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {loading && (
+          <div className="text-center my-3">
+            <Spinner animation="border" variant="info" />
+          </div>
+        )}
+        {error && <Alert variant="danger" className="text-center">{error}</Alert>}
+        {!loading && notifications.length === 0 && (
+          <p className="text-center">Aucune notification pour le moment.</p>
+        )}
+        {!loading && notifications.length > 0 && (
+          <ListGroup>
+            {notifications.map((notif, index) => (
+              <ListGroup.Item
+                key={index}
+                className="d-flex justify-content-between align-items-center"
+              >
+                {notif.message}
+                <Badge bg="secondary">
+                  {new Date(notif.createdAt).toLocaleString()}
+                </Badge>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        )}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={handleClose}>
+          Fermer
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 }

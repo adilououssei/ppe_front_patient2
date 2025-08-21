@@ -84,6 +84,10 @@ function Navbar() {
                                         <li>
                                             <Link to="/profile" className="dropdown-item">Profile</Link>
                                         </li>
+                                        
+                                        <li>
+                                            <Link to="/mes-notifications" className="dropdown-item">Notifications</Link>
+                                        </li>
                                         <li><hr className="dropdown-divider" /></li>
                                         <li>
                                             <button onClick={handleLogout} className="dropdown-item">Déconnexion</button>
