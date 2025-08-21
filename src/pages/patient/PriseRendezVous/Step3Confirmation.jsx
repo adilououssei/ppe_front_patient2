@@ -44,7 +44,7 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
     console.log('Données envoyées:', requestData); // Pour débogage
 
     const response = await axios.post(
-      'http://localhost:8000/api/rendezVous',
+      'https://myhospital.archipel-dutyfree.com/api/rendezVous',
       requestData,
       {
         headers: {

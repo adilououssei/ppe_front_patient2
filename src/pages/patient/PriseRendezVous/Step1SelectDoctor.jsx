@@ -21,7 +21,7 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error("Utilisateur non authentifié");
 
-      const response = await axios.get(`http://localhost:8000/api/docteurs?page=${currentPage}&limit=${limit}`, {
+      const response = await axios.get(`https://myhospital.archipel-dutyfree.com/api/docteurs?page=${currentPage}&limit=${limit}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

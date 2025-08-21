@@ -57,7 +57,7 @@ const MesRendezVousListe = () => {
       setChargement(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:8000/api/mes-rendezvous?page=${page}&limit=${limit}`,
+        `https://myhospital.archipel-dutyfree.com/api/mes-rendezvous?page=${page}&limit=${limit}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -101,7 +101,7 @@ const MesRendezVousListe = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:8000/api/rendezvous/${id}/update`,
+        `https://myhospital.archipel-dutyfree.com/api/rendezvous/${id}/update`,
         { statut: "annulé" },
         {
           headers: { Authorization: `Bearer ${token}` },

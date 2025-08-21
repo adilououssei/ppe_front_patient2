@@ -26,7 +26,7 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://localhost:8000/api/disponibilites?docteur=${initialData.docteur.id}`,
+          `https://myhospital.archipel-dutyfree.com/api/disponibilites?docteur=${initialData.docteur.id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 

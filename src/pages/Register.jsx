@@ -27,7 +27,7 @@ export default function Signup() {
             setError('');
             setLoading(true);
 
-            const response = await fetch('http://localhost:8000/api/register', {
+            const response = await fetch('https://myhospital.archipel-dutyfree.com/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, nom, prenom, adresse, telephone }),

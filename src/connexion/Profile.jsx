@@ -29,7 +29,7 @@ export default function Profile() {
     try {
       // Exemple de mise à jour via une API Symfony
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/profile/update', {
+      const response = await fetch('https://myhospital.archipel-dutyfree.com/api/profile/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

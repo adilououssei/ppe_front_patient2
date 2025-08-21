@@ -17,7 +17,7 @@ const PatientConsultationsEnLigne = () => {
     const fetchConsultations = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:8000/api/consultations/patient/online', {
+        const response = await fetch('https://myhospital.archipel-dutyfree.com/api/consultations/patient/online', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 

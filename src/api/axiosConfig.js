@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8000', // Votre backend Symfony
+  baseURL: 'https://myhospital.archipel-dutyfree.com', // Votre backend Symfony
   withCredentials: true, // Important pour les cookies/sessions
   headers: {
     'Content-Type': 'application/json',
