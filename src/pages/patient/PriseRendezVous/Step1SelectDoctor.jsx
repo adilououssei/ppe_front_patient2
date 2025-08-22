@@ -13,7 +13,7 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 6;
+  const limit = 6; // nombre de docteurs par page
 
   const fetchDocteurs = async (currentPage = 1) => {
     try {
@@ -21,20 +21,12 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error("Utilisateur non authentifié");
 
-      const response = await axios.get(
-        `https://myhospital.archipel-dutyfree.com/api/docteurs?page=${currentPage}&limit=${limit}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get(`https://myhospital.archipel-dutyfree.com/api/docteurs?page=${currentPage}&limit=${limit}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const data = Array.isArray(response.data.data) ? response.data.data : response.data;
-
-      // Transformer les specialites en tableau simple si nécessaire
-      const docteursData = data.map(doc => ({
-        ...doc,
-        specialites: doc.specialites ? Object.values(doc.specialites) : []
-      }));
-
-      setDocteurs(docteursData);
+      setDocteurs(data);
       setTotalPages(response.data.totalPages || 1);
       setPage(currentPage);
     } catch (err) {
@@ -52,11 +44,7 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateData({
-      docteur: selectedDocteur?.id || null, // ID seulement
-      consultationType,
-      symptoms
-    });
+    updateData({ docteur: selectedDocteur, consultationType, symptoms });
     nextStep();
   };
 
@@ -117,7 +105,7 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
           ) : (
             <>
               <Row className="g-4">
-                {docteurs.length > 0 ? (
+                {Array.isArray(docteurs) && docteurs.length > 0 ? (
                   docteurs.map((docteur) => (
                     <Col md={4} key={docteur.id}>
                       <Card
@@ -125,28 +113,14 @@ const Step1SelectDoctor = ({ nextStep, updateData, initialData }) => {
                         onClick={() => setSelectedDocteur(docteur)}
                         style={{ cursor: "pointer" }}
                       >
-                        {docteur.image ? (
-                          <Card.Img
-                            variant="top"
-                            src={docteur.image}
-                            alt={`${docteur.nom} ${docteur.prenom}`}
-                          />
-                        ) : (
-                          <div
-                            className="d-flex justify-content-center align-items-center"
-                            style={{ height: '100px', fontSize: '3rem', color: '#6c757d' }}
-                          >
-                            <i className="bi bi-person-circle"></i>
-                          </div>
-                        )}
+                        <Card.Img
+                          variant="top"
+                          src={docteur.image || '/img/default-doctor.jpg'}
+                          alt={`${docteur.nom} ${docteur.prenom}`}
+                        />
                         <Card.Body>
                           <Card.Title>{docteur.nom} {docteur.prenom}</Card.Title>
-                          <Card.Text className="text-muted">
-                            {docteur.specialites && docteur.specialites.length > 0
-                              ? docteur.specialites.map(s => s.nom).join(', ')
-                              : "Non renseigné"
-                            }
-                          </Card.Text>
+                          <Card.Text className="text-muted">{docteur.specialite}</Card.Text>
                         </Card.Body>
                       </Card>
                     </Col>
