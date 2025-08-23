@@ -11,14 +11,17 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const docteurId = initialData?.docteur?.id || initialData?.docteur; 
+  const docteurInfo = initialData?.docteur;
+
   useEffect(() => {
     setSelectedDate(null);
     setSelectedTime(null);
-  }, [initialData.docteur]);
+  }, [docteurId]);
 
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (!initialData.docteur?.id) return;
+      if (!docteurId) return;
 
       setLoading(true);
       setError(null);
@@ -26,7 +29,7 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `https://myhospital.archipel-dutyfree.com/api/disponibilites?docteur=${initialData.docteur.id}`,
+          `http://localhost:8000/api/disponibilites?docteur=${docteurId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -34,8 +37,7 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
 
         const slotsByDate = {};
         response.data.forEach(item => {
-          const dateKey = item.date;
-          slotsByDate[dateKey] = item.creneaux || [];
+          slotsByDate[item.date] = item.creneaux || [];
         });
 
         setAvailableSlots(slotsByDate);
@@ -48,7 +50,7 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
     };
 
     fetchAvailability();
-  }, [initialData.docteur]);
+  }, [docteurId]);
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
@@ -72,22 +74,27 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
     return format(date, 'EEEE d MMMM', { locale: fr });
   };
 
-  if (loading) {
-    return <Alert variant="info">Chargement des disponibilités...</Alert>;
-  }
+  const renderSpecialites = (specialites) => {
+    if (!specialites || specialites.length === 0) return "Non spécifié";
+    return Array.isArray(specialites)
+      ? specialites.map(s => s.nom).join(', ')
+      : specialites.nom || "Non spécifié";
+  };
 
-  if (error) {
-    return <Alert variant="danger">{error}</Alert>;
-  }
+  if (loading) return <Alert variant="info">Chargement des disponibilités...</Alert>;
+  if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
     <Card>
       <Card.Body>
         <Form onSubmit={handleSubmit}>
           <h4 className="mb-4">2. Choisissez un créneau</h4>
-          <p className="text-muted mb-4">
-            Disponibilités du Dr. {initialData.docteur?.nom} ({initialData.docteur?.specialite?.nom})
-          </p>
+
+          {docteurInfo && (
+            <p className="text-muted mb-4">
+              Disponibilités du Dr. {docteurInfo.nom} {docteurInfo.prenom} ({renderSpecialites(docteurInfo.specialites)})
+            </p>
+          )}
 
           <Row>
             <Col md={5}>
@@ -119,7 +126,9 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
                             className="w-100 mb-2"
                             onClick={() => setSelectedTime(slot)}
                           >
-                            {`${slot.debut ? format(parse(slot.debut, 'HH:mm', new Date()), 'HH:mm') : ''} - ${slot.fin ? format(parse(slot.fin, 'HH:mm', new Date()), 'HH:mm') : ''}`}
+                            {slot.debut && slot.fin
+                              ? `${slot.debut} - ${slot.fin}`
+                              : "Heure indisponible"}
                           </Button>
                         </Col>
                       ))}
@@ -129,9 +138,7 @@ const Step2SelectTime = ({ nextStep, prevStep, updateData, initialData }) => {
                   )}
                 </div>
               ) : (
-                <Alert variant="warning">
-                  Veuillez sélectionner une date pour voir les créneaux disponibles
-                </Alert>
+                <Alert variant="warning">Veuillez sélectionner une date pour voir les créneaux disponibles</Alert>
               )}
             </Col>
           </Row>

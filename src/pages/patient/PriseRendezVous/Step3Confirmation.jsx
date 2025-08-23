@@ -28,17 +28,30 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Authentification requise');
 
-    const response = await axios.post(
-      'https://myhospital.archipel-dutyfree.com/api/rendezVous',
-      requestData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+      // 🔹 Définir le payload avant l'appel axios
+      const requestData = {
+        docteur: data?.docteur?.id,
+        dateRendezVous: data?.date,
+        heureRendezVous: data?.time?.debut,
+        typeConsultation: data?.consultationType,
+        descriptionRendezVous: data?.symptoms,
+        address: data?.consultationType === 'a_domicile' ? data?.address : null
+      };
 
+      console.log('Payload envoyé:', requestData);
+
+      const response = await axios.post(
+        'http://localhost:8000/api/rendezVous',
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Réponse backend:', response.data);
       navigate('/mes-rdv', { state: { success: true } });
 
     } catch (err) {
@@ -79,7 +92,7 @@ const Step3Confirmation = ({ prevStep, data = {} }) => {
         <ListGroup variant="flush" className="mb-4">
           <ListGroup.Item>
             <strong>Médecin:</strong> {data?.docteur?.nom
-              ? `Dr. ${data.docteur.nom} (${data.docteur.specialite || 'Spécialité non précisée'})`
+              ? `Dr. ${data.docteur.nom} (${data.docteur.specialites?.map(s => s.nom).join(', ') || 'Spécialité non précisée'})`
               : 'Non spécifié'}
           </ListGroup.Item>
 

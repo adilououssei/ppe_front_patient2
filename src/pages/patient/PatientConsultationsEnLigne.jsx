@@ -17,7 +17,7 @@ const PatientConsultationsEnLigne = () => {
     const fetchConsultations = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('https://myhospital.archipel-dutyfree.com/api/consultations/patient/online', {
+        const response = await fetch('http://localhost:8000/api/consultations/patient/online', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -27,20 +27,20 @@ const PatientConsultationsEnLigne = () => {
 
         const formattedData = data.map(c => ({
           id: c.id,
-          docteur: c.rendezVous?.docteur
-            ? `${c.rendezVous.docteur.prenom} ${c.rendezVous.docteur.nom}`
-            : 'Docteur',
-          date: c.rendezVous?.dateConsultationAt
-            ? new Date(c.rendezVous.dateConsultationAt).toLocaleDateString()
+          docteur: c.docteurNomComplet || 'Docteur',
+          date: c.dateRendezVous
+            ? new Date(c.dateRendezVous).toLocaleDateString()
             : 'N/A',
-          time: c.rendezVous?.heureConsultation
-            ? c.rendezVous.heureConsultation.substring(0, 5)
+          time: c.heureRendezVous
+            ? new Date(c.heureRendezVous).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             : 'N/A',
           symptoms: c.symptoms || 'Non spécifié',
-          statut: c.statut || c.rendezVous?.statut || 'inconnu',
+          statut: c.statut || 'inconnu',
           prescription: c.prescription || '',
           lienVideo: `https://meet.jit.si/${c.id}-consultation`
         }));
+
+
 
         setConsultations(formattedData);
       } catch (err) {
@@ -96,7 +96,6 @@ const PatientConsultationsEnLigne = () => {
                     <p className="mb-1">
                       Date: {consultation.date} à {consultation.time}
                     </p>
-                    <p className="mb-1">Symptômes: {consultation.symptoms}</p>
                     <Badge
                       bg={
                         consultation.statut.toLowerCase() === 'confirmé'
